@@ -12,7 +12,7 @@
  *     TAO Bitmap Utils
  * 
  * File name:
- *     BitmapMaker.java
+ *     BitmapConverter.java
  *     
  * License agreement:
  *
@@ -43,7 +43,7 @@ import android.view.ViewGroup.LayoutParams;
  * 
  * @author A.Tsvetkov 2014 http://tsvetkov.at.ua mailto:al@ukr.net
  */
-public class BitmapMaker {
+public class BitmapConverter {
 
    /**
     * Generate bitmap from view.

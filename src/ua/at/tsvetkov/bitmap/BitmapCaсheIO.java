@@ -29,8 +29,9 @@
 package ua.at.tsvetkov.bitmap;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -38,10 +39,10 @@ import ua.at.tsvetkov.application.AppConfig;
 import ua.at.tsvetkov.util.Log;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Point;
+import android.graphics.PointF;
 
 /**
- * Work with cached bitmaps
+ * Work with cached bitmap
  * 
  * @author Alexandr Tsvetkov 2014
  */
@@ -73,8 +74,8 @@ public class BitmapCaсheIO {
 
    /**
     * Generate file name ({@link md5} string and ".bin" extension) in to the directory on the primary external filesystem (that is somewhere
-    * on {@link AppConfig.getCacheFileName} where the application can place cache files it owns. These files are internal to
-    * the application, and not typically visible to the user as media.
+    * on {@link AppConfig.getCacheFileName} where the application can place cache files it owns. These files are internal to the
+    * application, and not typically visible to the user as media.
     * 
     * @param context
     * @param data
@@ -82,6 +83,43 @@ public class BitmapCaсheIO {
     */
    public static String getCachedFileName(byte[] data) {
       return AppConfig.getCacheFileName(md5(data) + ".bin");
+   }
+
+   /**
+    * Generate file name ({@link md5} string and your extension) in to the directory on the primary external filesystem (that is somewhere
+    * on {@link AppConfig.getCacheFileName} where the application can place cache files it owns. These files are internal to the
+    * application, and not typically visible to the user as media.
+    * 
+    * @param context
+    * @param data
+    * @return
+    */
+   public static String getCachedFileName(byte[] data, String extension) {
+      return AppConfig.getCacheFileName(md5(data) + extension);
+   }
+
+   /**
+    * Return cache file name ({@link md5} string and ".bin" extension) based on source file data
+    * 
+    * @param fileName
+    * @return
+    */
+   public static String getCacheFileNameFromFileData(String fileName) {
+      byte[] data = null;
+      try {
+         File file = new File(fileName);
+         FileInputStream in = new FileInputStream(file);
+         data = new byte[(int) file.length()];
+         in.read(data);
+         in.close();
+      } catch (Exception e) {
+         Log.e(e);
+         return null;
+      }
+      String md5 = md5(data);
+      data = null;
+      System.gc();
+      return AppConfig.getCacheFileName(md5 + ".bin");
    }
 
    /**
@@ -108,32 +146,116 @@ public class BitmapCaсheIO {
     * @return
     */
    public static Bitmap createSampledCaсhedBitmap(String caсhedFileName, byte[] data, float reqWidth, float reqHeight) {
-      if (checkCaсhedFile(caсhedFileName, data))
+      if (saveCaсheFile(caсhedFileName, data))
          return decodeSampledBitmapFromFile(caсhedFileName, reqWidth, reqHeight);
       else
          return null;
    }
 
    /**
-    * Check of presence the cached file and create it from data if file is not present. Cache file placed in cache directory, see
-    * {@link BitmapCaсheIO.getCachedFileName}
+    * Create cache file from data if file is not present. Cache file placed in cache directory, see {@link BitmapCaсheIO.getCachedFileName}
     * 
     * @param data
-    * @return
+    * @return cache file name or null
     */
-   public static boolean checkCaсhedFile(  byte[] data) {
-      String caсhedFileName = getCachedFileName( data);
-      return checkCaсhedFile(caсhedFileName, data);
+   public static String saveCaсheFile(byte[] data) {
+      String caсhedFileName = getCachedFileName(data);
+      if (saveCaсheFile(caсhedFileName, data)) {
+         return caсhedFileName;
+      } else {
+         return null;
+      }
    }
 
    /**
-    * Check of presence the cached file and create it from data if file is not present
+    * Copy source file to cache file placed in cache directory, see {@link BitmapCaсheIO.getCachedFileName}
+    * 
+    * @param data
+    * @return cache file name or null
+    */
+   public static String copyToCaсheFile(String sourceFileName) {
+      byte[] data = null;
+      try {
+         File file = new File(sourceFileName);
+         FileInputStream in = new FileInputStream(file);
+         data = new byte[(int) file.length()];
+         in.read(data);
+         in.close();
+      } catch (Exception e) {
+         Log.e(e);
+         return null;
+      }
+      String caсhedFileName = getCachedFileName(data);
+      if (!saveCaсheFile(caсhedFileName, data)) {
+         Log.e("Can't create cache file " + caсhedFileName);
+         return null;
+      }
+      return caсhedFileName;
+   }
+
+   /**
+    * Copy source file to cache file placed in cache directory, see {@link BitmapCaсheIO.getCachedFileName}
+    * 
+    * @param data
+    * @return cache file name or null
+    */
+   public static String copyToCaсheFile(InputStream in) {
+      try {
+         File file = new File(getCachedFileName(new byte[] { 7, 7, 7, 7, 7, 7, 7 })); // Stub file name
+         FileOutputStream fOut = new FileOutputStream(file);
+         byte[] buffer = new byte[1024 * 8];
+         int bytesRead = -1;
+         while ((bytesRead = in.read(buffer)) != -1) {
+            fOut.write(buffer, 0, bytesRead);
+         }
+         fOut.flush();
+         fOut.close();
+         in.close();
+         buffer = null;
+         String caсhedFileName = getCacheFileNameFromFileData(file.getName());
+         if (!file.renameTo(new File(caсhedFileName))) {
+            Log.e("Can't rename cache file" + file.getName());
+            return null;
+         }
+         return caсhedFileName;
+      } catch (Exception e) {
+         Log.e("Can't create cache file from InputStream", e);
+         return null;
+      }
+   }
+
+   /**
+    * Compress bitmap to cache file placed in cache directory, see {@link BitmapCaсheIO.getCachedFileName}. If compressing was success then
+    * bitmap will recicle.
+    * 
+    * @param data
+    * @return cache file name or null
+    */
+   public static String copyToCaсheFile(Bitmap bitmap) {
+      File file = new File(getCachedFileName(new byte[] { 7, 7, 7, 7, 7, 7, 7 })); // Stub file name
+      try {
+         bitmap.compress(Bitmap.CompressFormat.PNG, 0, new FileOutputStream(file));
+         String caсhedFileName = getCacheFileNameFromFileData(file.getName());
+         if (!file.renameTo(new File(caсhedFileName))) {
+            Log.e("Can't rename cache file" + file.getName());
+            return null;
+         }
+         bitmap.recycle();
+         return caсhedFileName;
+      } catch (Exception e) {
+         Log.e("Can't compress bitmap to file", e);
+         return null;
+      }
+   }
+
+   /**
+    * Create cache file from data if file is not present
     * 
     * @param caсhedFileName
     * @param data
-    * @return
+    * @return true if success
     */
-   public static boolean checkCaсhedFile(String caсhedFileName, byte[] data) {
+   public static boolean saveCaсheFile(String caсhedFileName, byte[] data) {
       File file = new File(caсhedFileName);
       if (!file.exists()) {
          try {
@@ -141,8 +263,8 @@ public class BitmapCaсheIO {
             fOut.write(data, 0, data.length);
             fOut.flush();
             fOut.close();
-         } catch (IOException e) {
-            Log.w(e);
+         } catch (Exception e) {
+            Log.w("Can't create cache file " + caсhedFileName, e);
             return false;
          }
       }
@@ -158,9 +280,21 @@ public class BitmapCaсheIO {
     * @return
     */
    public static Bitmap decodeSampledBitmapFromFile(String pathName, float reqWidth, float reqHeight) {
+      return decodeSampledBitmapFromFile(pathName, reqWidth, reqHeight, null);
+   }
 
+   /**
+    * Return resized bitmap with NEAREST size.
+    * 
+    * @param pathName
+    * @param reqWidth
+    * @param reqHeight
+    * @return
+    */
+   public static Bitmap decodeSampledBitmapFromFile(String pathName, float reqWidth, float reqHeight, BitmapFactory.Options options) {
       // First decode with inJustDecodeBounds=true to check dimensions
-      final BitmapFactory.Options options = new BitmapFactory.Options();
+      if (options == null)
+         options = new BitmapFactory.Options();
       options.inJustDecodeBounds = true;
       BitmapFactory.decodeFile(pathName, options);
 
@@ -178,9 +312,28 @@ public class BitmapCaсheIO {
     * @param pathName
     * @return point.x = width, point.y = height
     */
-   public static Point getImageDimensions(  byte[] data) {
-      String caсhedFileName = getCachedFileName( data);
+   public static PointF getImageDimensions(byte[] data) {
+      String caсhedFileName = getCachedFileName(data);
       return getImageDimensions(caсhedFileName, data);
+   }
+
+   /**
+    * Return an image dimensions for image file.
+    * 
+    * @param pathName
+    * @return point.x = width, point.y = height
+    */
+   public static PointF getImageDimensions(String fileName) {
+      PointF size = new PointF();
+      BitmapFactory.Options options = new BitmapFactory.Options();
+      options.inJustDecodeBounds = true;
+      BitmapFactory.decodeFile(fileName, options);
+      if (options.outWidth == -1 || options.outHeight == -1) {
+         Log.e("Can't decode " + fileName);
+         return size;
+      } else {
+         return new PointF(options.outWidth, options.outHeight);
+      }
    }
 
    /**
@@ -190,9 +343,9 @@ public class BitmapCaсheIO {
     * @param pathName
     * @return point.x = width, point.y = height
     */
-   public static Point getImageDimensions(String caсhedFileName, byte[] data) {
-      Point size = new Point();
-      if (checkCaсhedFile(caсhedFileName, data)) {
+   public static PointF getImageDimensions(String caсhedFileName, byte[] data) {
+      PointF size = new PointF();
+      if (saveCaсheFile(caсhedFileName, data)) {
          BitmapFactory.Options options = new BitmapFactory.Options();
          options.inJustDecodeBounds = true;
          BitmapFactory.decodeFile(caсhedFileName, options);
@@ -200,13 +353,12 @@ public class BitmapCaсheIO {
             Log.e("Can't decode " + caсhedFileName);
             return size;
          } else {
-            return new Point(options.outWidth, options.outHeight);
+            return new PointF(options.outWidth, options.outHeight);
          }
       } else {
          Log.e("Can't decode " + caсhedFileName);
          return size;
       }
-
    }
 
    /**
