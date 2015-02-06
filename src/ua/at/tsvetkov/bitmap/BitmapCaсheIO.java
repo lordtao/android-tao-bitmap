@@ -65,8 +65,9 @@ public class BitmapCaсheIO {
 
       StringBuilder hex = new StringBuilder(hash.length * 2);
       for (byte b : hash) {
-         if ((b & 0xFF) < 0x10)
+         if ((b & 0xFF) < 0x10) {
             hex.append("0");
+         }
          hex.append(Integer.toHexString(b & 0xFF));
       }
       return hex.toString();
@@ -146,10 +147,11 @@ public class BitmapCaсheIO {
     * @return
     */
    public static Bitmap createSampledCaсhedBitmap(String caсhedFileName, byte[] data, float reqWidth, float reqHeight) {
-      if (saveCaсheFile(caсhedFileName, data))
+      if (saveCaсheFile(caсhedFileName, data)) {
          return decodeSampledBitmapFromFile(caсhedFileName, reqWidth, reqHeight);
-      else
+      } else {
          return null;
+      }
    }
 
    /**
@@ -272,6 +274,35 @@ public class BitmapCaсheIO {
    }
 
    /**
+    * Read cache file
+    * 
+    * @param caсhedFileName
+    * @return data
+    */
+   public static byte[] readDataFile(String fileName) {
+      File file = new File(fileName);
+      byte[] data = new byte[(int) file.length()];
+      byte[] buffer = new byte[1024];
+      if (file.exists()) {
+         try {
+            FileInputStream fIn = new FileInputStream(file);
+            int count = 0;
+            int pos = 0;
+            while ((count = fIn.read(buffer)) > 0) {
+               for (int i = 0; i < count; i++) {
+                  data[pos++] = buffer[i];
+               }
+            }
+            fIn.close();
+         } catch (Exception e) {
+            Log.w("Can't read cache file " + fileName, e);
+            return null;
+         }
+      }
+      return data;
+   }
+
+   /**
     * Return resized bitmap with NEAREST size.
     * 
     * @param pathName
@@ -293,8 +324,9 @@ public class BitmapCaсheIO {
     */
    public static Bitmap decodeSampledBitmapFromFile(String pathName, float reqWidth, float reqHeight, BitmapFactory.Options options) {
       // First decode with inJustDecodeBounds=true to check dimensions
-      if (options == null)
+      if (options == null) {
          options = new BitmapFactory.Options();
+      }
       options.inJustDecodeBounds = true;
       BitmapFactory.decodeFile(pathName, options);
 

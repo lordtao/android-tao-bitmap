@@ -158,7 +158,7 @@ public class BitmapTransformer {
                Log.e("Can't load from resource " + resourceId, e);
             }
          } else {
-            throw new IllegalArgumentException("Bitmap data source was not set.");
+            // throw new IllegalArgumentException("Bitmap data source was not set.");
          }
       }
    }
@@ -204,13 +204,18 @@ public class BitmapTransformer {
 
    private void transformBitmap() {
       Matrix matrix = new Matrix();
-      if (isFlipHorizontal) {
-         matrix.setScale(-1, 1);
-         matrix.postTranslate(bitmap.getWidth(), 0);
-      }
-      if (isFlipVertical) {
-         matrix.setScale(1, -1);
-         matrix.postTranslate(0, bitmap.getHeight());
+      if (isFlipHorizontal && isFlipVertical) {
+         matrix.setScale(-1, -1);
+         matrix.postTranslate(bitmap.getWidth(), bitmap.getHeight());
+      } else {
+         if (isFlipHorizontal) {
+            matrix.setScale(-1, 1);
+            matrix.postTranslate(bitmap.getWidth(), 0);
+         }
+         if (isFlipVertical) {
+            matrix.setScale(1, -1);
+            matrix.postTranslate(0, bitmap.getHeight());
+         }
       }
       if (rotateAngel != 0) {
          matrix.postRotate(rotateAngel);
