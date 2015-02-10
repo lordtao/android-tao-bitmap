@@ -207,15 +207,12 @@ public class BitmapTransformer {
       if (isFlipHorizontal && isFlipVertical) {
          matrix.setScale(-1, -1);
          matrix.postTranslate(bitmap.getWidth(), bitmap.getHeight());
-      } else {
-         if (isFlipHorizontal) {
-            matrix.setScale(-1, 1);
-            matrix.postTranslate(bitmap.getWidth(), 0);
-         }
-         if (isFlipVertical) {
-            matrix.setScale(1, -1);
-            matrix.postTranslate(0, bitmap.getHeight());
-         }
+      } else if (isFlipHorizontal) {
+         matrix.setScale(-1, 1);
+         matrix.postTranslate(bitmap.getWidth(), 0);
+      } else if (isFlipVertical) {
+         matrix.setScale(1, -1);
+         matrix.postTranslate(0, bitmap.getHeight());
       }
       if (rotateAngel != 0) {
          matrix.postRotate(rotateAngel);
