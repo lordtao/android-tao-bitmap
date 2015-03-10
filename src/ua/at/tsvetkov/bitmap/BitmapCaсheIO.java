@@ -36,6 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import ua.at.tsvetkov.application.AppConfig;
+import ua.at.tsvetkov.io.FileIO;
 import ua.at.tsvetkov.util.Log;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -83,7 +84,7 @@ public class BitmapCaсheIO {
     * @return
     */
    public static String getCachedFileName(byte[] data) {
-      return AppConfig.getCacheFileName(md5(data) + ".bin");
+      return FileIO.getCacheFileName(md5(data) + ".bin");
    }
 
    /**
@@ -96,7 +97,7 @@ public class BitmapCaсheIO {
     * @return
     */
    public static String getCachedFileName(byte[] data, String extension) {
-      return AppConfig.getCacheFileName(md5(data) + extension);
+      return FileIO.getCacheFileName(md5(data) + extension);
    }
 
    /**
@@ -120,7 +121,7 @@ public class BitmapCaсheIO {
       String md5 = md5(data);
       data = null;
       System.gc();
-      return AppConfig.getCacheFileName(md5 + ".bin");
+      return FileIO.getCacheFileName(md5 + ".bin");
    }
 
    /**
