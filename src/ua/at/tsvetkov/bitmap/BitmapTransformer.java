@@ -31,6 +31,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.RectF;
@@ -219,6 +220,20 @@ public class BitmapTransformer {
       }
       if (isNeedToCrop) {
          try {
+            if (cropLeft + cropWidth > bitmap.getWidth() || cropTop + cropHeight > bitmap.getHeight()) {
+               int wd = bitmap.getWidth();
+               int hd = bitmap.getHeight();
+               if (cropLeft + cropWidth > bitmap.getWidth()) {
+                  wd = (int) (cropLeft + cropWidth);
+               }
+               if (cropTop + cropHeight > bitmap.getHeight()) {
+                  hd = (int) (cropTop + cropHeight);
+               }
+               Bitmap bmp = Bitmap.createBitmap(wd, hd, bitmap.getConfig());
+               Canvas canvas = new Canvas(bmp);
+               canvas.drawBitmap(bitmap, 0, 0, null);
+               bitmap = bmp;
+            }
             bitmap = Bitmap.createBitmap(bitmap, (int) cropLeft, (int) cropTop, (int) cropWidth, (int) cropHeight, matrix, isUseFilter);
          } catch (Exception e) {
             Log.e("Wrong crop parameters. Transformed bitmap has width=" + bitmap.getWidth() + " and height=" + bitmap.getHeight() + ", but you try to crop to width=" + cropWidth + " and height="
