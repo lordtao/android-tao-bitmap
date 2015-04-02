@@ -170,7 +170,7 @@ public class BitmapTransformer {
       }
       PointF point = new PointF();
       if (isUseCacheFile) {
-         point = BitmapCaсheIO.getImageDimensions(cacheFileName);
+         point = BitmapData.getImageProportions(cacheFileName);
       } else {
          point.x = bitmap.getWidth();
          point.y = bitmap.getHeight();

@@ -32,15 +32,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import ua.at.tsvetkov.application.AppConfig;
 import ua.at.tsvetkov.io.FileIO;
+import ua.at.tsvetkov.security.Md5;
 import ua.at.tsvetkov.util.Log;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.PointF;
 
 /**
  * Work with cached bitmap
@@ -49,79 +47,8 @@ import android.graphics.PointF;
  */
 public class BitmapCaсheIO {
 
-   /**
-    * Return hash sum String for given data
-    * 
-    * @param data
-    * @return
-    */
-   public static String md5(byte[] data) {
-      byte[] hash;
+   private BitmapCaсheIO() {
 
-      try {
-         hash = MessageDigest.getInstance("MD5").digest(data);
-      } catch (NoSuchAlgorithmException e) {
-         throw new RuntimeException("Huh, MD5 should be supported?", e);
-      }
-
-      StringBuilder hex = new StringBuilder(hash.length * 2);
-      for (byte b : hash) {
-         if ((b & 0xFF) < 0x10) {
-            hex.append("0");
-         }
-         hex.append(Integer.toHexString(b & 0xFF));
-      }
-      return hex.toString();
-   }
-
-   /**
-    * Generate file name ({@link md5} string and ".bin" extension) in to the directory on the primary external filesystem (that is somewhere
-    * on {@link AppConfig.getCacheFileName} where the application can place cache files it owns. These files are internal to the
-    * application, and not typically visible to the user as media.
-    * 
-    * @param context
-    * @param data
-    * @return
-    */
-   public static String getCachedFileName(byte[] data) {
-      return FileIO.getCacheFileName(md5(data) + ".bin");
-   }
-
-   /**
-    * Generate file name ({@link md5} string and your extension) in to the directory on the primary external filesystem (that is somewhere
-    * on {@link AppConfig.getCacheFileName} where the application can place cache files it owns. These files are internal to the
-    * application, and not typically visible to the user as media.
-    * 
-    * @param context
-    * @param data
-    * @return
-    */
-   public static String getCachedFileName(byte[] data, String extension) {
-      return FileIO.getCacheFileName(md5(data) + extension);
-   }
-
-   /**
-    * Return cache file name ({@link md5} string and ".bin" extension) based on source file data
-    * 
-    * @param fileName
-    * @return
-    */
-   public static String getCacheFileNameFromFileData(String fileName) {
-      byte[] data = null;
-      try {
-         File file = new File(fileName);
-         FileInputStream in = new FileInputStream(file);
-         data = new byte[(int) file.length()];
-         in.read(data);
-         in.close();
-      } catch (Exception e) {
-         Log.e(e);
-         return null;
-      }
-      String md5 = md5(data);
-      data = null;
-      System.gc();
-      return FileIO.getCacheFileName(md5 + ".bin");
    }
 
    /**
@@ -215,7 +142,7 @@ public class BitmapCaсheIO {
          fOut.close();
          in.close();
          buffer = null;
-         String caсhedFileName = getCacheFileNameFromFileData(file.getName());
+         String caсhedFileName = Md5.getHasheString(file.getName());
          if (!file.renameTo(new File(caсhedFileName))) {
             Log.e("Can't rename cache file" + file.getName());
             return null;
@@ -238,7 +165,7 @@ public class BitmapCaсheIO {
       File file = new File(getCachedFileName(new byte[] { 7, 7, 7, 7, 7, 7, 7 })); // Stub file name
       try {
          bitmap.compress(Bitmap.CompressFormat.PNG, 0, new FileOutputStream(file));
-         String caсhedFileName = getCacheFileNameFromFileData(file.getName());
+         String caсhedFileName = Md5.getHasheString(file.getName());
          if (!file.renameTo(new File(caсhedFileName))) {
             Log.e("Can't rename cache file" + file.getName());
             return null;
@@ -340,61 +267,6 @@ public class BitmapCaсheIO {
    }
 
    /**
-    * Return an image dimensions for image data. Cache file placed in cache directory, see {@link BitmapCaсheIO.getCachedFileName}
-    * 
-    * @param pathName
-    * @return point.x = width, point.y = height
-    */
-   public static PointF getImageDimensions(byte[] data) {
-      String caсhedFileName = getCachedFileName(data);
-      return getImageDimensions(caсhedFileName, data);
-   }
-
-   /**
-    * Return an image dimensions for image file.
-    * 
-    * @param pathName
-    * @return point.x = width, point.y = height
-    */
-   public static PointF getImageDimensions(String fileName) {
-      PointF size = new PointF();
-      BitmapFactory.Options options = new BitmapFactory.Options();
-      options.inJustDecodeBounds = true;
-      BitmapFactory.decodeFile(fileName, options);
-      if (options.outWidth == -1 || options.outHeight == -1) {
-         Log.e("Can't decode " + fileName);
-         return size;
-      } else {
-         return new PointF(options.outWidth, options.outHeight);
-      }
-   }
-
-   /**
-    * Return an image dimensions for image data
-    * 
-    * @param caсhedFileName
-    * @param pathName
-    * @return point.x = width, point.y = height
-    */
-   public static PointF getImageDimensions(String caсhedFileName, byte[] data) {
-      PointF size = new PointF();
-      if (saveCaсheFile(caсhedFileName, data)) {
-         BitmapFactory.Options options = new BitmapFactory.Options();
-         options.inJustDecodeBounds = true;
-         BitmapFactory.decodeFile(caсhedFileName, options);
-         if (options.outWidth == -1 || options.outHeight == -1) {
-            Log.e("Can't decode " + caсhedFileName);
-            return size;
-         } else {
-            return new PointF(options.outWidth, options.outHeight);
-         }
-      } else {
-         Log.e("Can't decode " + caсhedFileName);
-         return size;
-      }
-   }
-
-   /**
     * Calculate nearest sizes
     * 
     * @param options
@@ -402,7 +274,7 @@ public class BitmapCaсheIO {
     * @param reqHeight
     * @return
     */
-   private static int calculateInSampleSize(BitmapFactory.Options options, float reqWidth, float reqHeight) {
+   public static int calculateInSampleSize(BitmapFactory.Options options, float reqWidth, float reqHeight) {
       // Raw height and width of image
       final int height = options.outHeight;
       final int width = options.outWidth;
@@ -421,6 +293,32 @@ public class BitmapCaсheIO {
       }
 
       return inSampleSize;
+   }
+
+   /**
+    * Generate file name ({@link md5} string and ".bin" extension) in to the directory on the primary external filesystem (that is somewhere
+    * on {@link AppConfig.getCacheFileName} where the application can place cache files it owns. These files are internal to the
+    * application, and not typically visible to the user as media.
+    * 
+    * @param context
+    * @param data
+    * @return
+    */
+   static String getCachedFileName(byte[] data) {
+      return getCachedFileName(data, ".bin");
+   }
+
+   /**
+    * Generate file name ({@link md5} string and your extension) in to the directory on the primary external filesystem (that is somewhere
+    * on {@link AppConfig.getCacheFileName} where the application can place cache files it owns. These files are internal to the
+    * application, and not typically visible to the user as media.
+    * 
+    * @param context
+    * @param data
+    * @return
+    */
+   static String getCachedFileName(byte[] data, String extension) {
+      return FileIO.getCacheFileName(Md5.getHasheString(data) + extension);
    }
 
 }

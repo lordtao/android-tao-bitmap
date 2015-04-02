@@ -45,6 +45,10 @@ import android.view.ViewGroup.LayoutParams;
  */
 public class BitmapConverter {
 
+   private BitmapConverter() {
+
+   }
+
    /**
     * Generate bitmap from view.
     * 
@@ -88,7 +92,7 @@ public class BitmapConverter {
     * @param bitmap
     * @return shaped bitmap
     */
-   public Bitmap createShapedBitmap(Bitmap mask, Bitmap bitmap) {
+   public static Bitmap createShapedBitmap(Bitmap mask, Bitmap bitmap) {
       Bitmap bmp;
 
       int width = mask.getWidth() > bitmap.getWidth() ? mask.getWidth() : bitmap.getWidth();
