@@ -132,7 +132,7 @@ public class BitmapIO {
     * @return true if success
     */
    public static boolean resizeAndSave(String fileName, float reqWidth, float reqHeight) {
-      String tmpFileName = FilePath.getFilePath(fileName) + Md5.getHasheString(fileName) + ".bin";
+      String tmpFileName = FilePath.getFilePath(fileName) + Md5.getHashString(fileName) + ".bin";
       boolean result = resizeAndSaveTo(fileName, tmpFileName, reqWidth, reqHeight);
       if (result) {
          return FileIO.rename(tmpFileName, fileName);
@@ -155,7 +155,7 @@ public class BitmapIO {
       if (maxWidth > dim.x && maxHeight > dim.y) {
          return true;
       }
-      String tmpFileName = FilePath.getFilePath(fileName) + Md5.getHasheString(fileName) + ".bin";
+      String tmpFileName = FilePath.getFilePath(fileName) + Md5.getHashString(fileName) + ".bin";
       boolean result = resizeAndSaveTo(fileName, tmpFileName, maxWidth, maxHeight);
       if (result) {
          return FileIO.rename(tmpFileName, fileName);

@@ -53,7 +53,7 @@ public class BitmapCaсheIO {
 
    /**
     * Create cached resized bitmap with NEAREST size from byte array. Cache file placed in cache directory, see
-    * {@link BitmapCaсheIO.getCachedFileName}
+    * {@link FileIO#getCacheFileName(String str)}
     * 
     * @param data
     * @param reqWidth
@@ -83,7 +83,7 @@ public class BitmapCaсheIO {
    }
 
    /**
-    * Create cache file from data if file is not present. Cache file placed in cache directory, see {@link BitmapCaсheIO.getCachedFileName}
+    * Create cache file from data if file is not present. Cache file placed in cache directory, see {@link FileIO#getCacheFileName(String str)}
     * 
     * @param data
     * @return cache file name or null
@@ -98,9 +98,9 @@ public class BitmapCaсheIO {
    }
 
    /**
-    * Copy source file to cache file placed in cache directory, see {@link BitmapCaсheIO.getCachedFileName}
+    * Copy source file to cache file placed in cache directory, see {@link FileIO#getCacheFileName(String str)}
     * 
-    * @param data
+    * @param sourceFileName
     * @return cache file name or null
     */
    public static String copyToCaсheFile(String sourceFileName) {
@@ -124,9 +124,9 @@ public class BitmapCaсheIO {
    }
 
    /**
-    * Copy source file to cache file placed in cache directory, see {@link BitmapCaсheIO.getCachedFileName}
+    * Copy source file to cache file placed in cache directory, see {@link FileIO#getCacheFileName(String str)}
     * 
-    * @param data
+    * @param in
     * @return cache file name or null
     */
    public static String copyToCaсheFile(InputStream in) {
@@ -142,7 +142,7 @@ public class BitmapCaсheIO {
          fOut.close();
          in.close();
          buffer = null;
-         String caсhedFileName = Md5.getHasheString(file.getName());
+         String caсhedFileName = Md5.getHashString(file.getName());
          if (!file.renameTo(new File(caсhedFileName))) {
             Log.e("Can't rename cache file" + file.getName());
             return null;
@@ -155,17 +155,17 @@ public class BitmapCaсheIO {
    }
 
    /**
-    * Compress bitmap to cache file placed in cache directory, see {@link BitmapCaсheIO.getCachedFileName}. If compressing was success then
+    * Compress bitmap to cache file placed in cache directory, see {@link FileIO#getCacheFileName(String str)}. If compressing was success then
     * bitmap will recicle.
     * 
-    * @param data
+    * @param bitmap
     * @return cache file name or null
     */
    public static String copyToCaсheFile(Bitmap bitmap) {
       File file = new File(getCachedFileName(new byte[] { 7, 7, 7, 7, 7, 7, 7 })); // Stub file name
       try {
          bitmap.compress(Bitmap.CompressFormat.PNG, 0, new FileOutputStream(file));
-         String caсhedFileName = Md5.getHasheString(file.getName());
+         String caсhedFileName = Md5.getHashString(file.getName());
          if (!file.renameTo(new File(caсhedFileName))) {
             Log.e("Can't rename cache file" + file.getName());
             return null;
@@ -204,7 +204,7 @@ public class BitmapCaсheIO {
    /**
     * Read cache file
     * 
-    * @param caсhedFileName
+    * @param fileName
     * @return data
     */
    public static byte[] readDataFile(String fileName) {
@@ -296,11 +296,10 @@ public class BitmapCaсheIO {
    }
 
    /**
-    * Generate file name ({@link md5} string and ".bin" extension) in to the directory on the primary external filesystem (that is somewhere
-    * on {@link AppConfig.getCacheFileName} where the application can place cache files it owns. These files are internal to the
+    * Generate file name ({@link Md5} string and ".bin" extension) in to the directory on the primary external filesystem (that is somewhere
+    * on {@link FileIO#getCacheFileName(String str)} where the application can place cache files it owns. These files are internal to the
     * application, and not typically visible to the user as media.
     * 
-    * @param context
     * @param data
     * @return
     */
@@ -309,16 +308,15 @@ public class BitmapCaсheIO {
    }
 
    /**
-    * Generate file name ({@link md5} string and your extension) in to the directory on the primary external filesystem (that is somewhere
-    * on {@link AppConfig.getCacheFileName} where the application can place cache files it owns. These files are internal to the
+    * Generate file name ({@link Md5} string and your extension) in to the directory on the primary external filesystem (that is somewhere
+    * on {@link FileIO#getCacheFileName(String str)} where the application can place cache files it owns. These files are internal to the
     * application, and not typically visible to the user as media.
     * 
-    * @param context
     * @param data
     * @return
     */
    static String getCachedFileName(byte[] data, String extension) {
-      return FileIO.getCacheFileName(Md5.getHasheString(data) + extension);
+      return FileIO.getCacheFileName(Md5.getHashString(data) + extension);
    }
 
 }

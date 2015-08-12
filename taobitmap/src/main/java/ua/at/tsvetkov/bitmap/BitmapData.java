@@ -21,7 +21,7 @@ public class BitmapData {
     * Return an image proportions for image data. Temporary cache file placed in default cache directory. Need to WRITE_EXTERNAL_STORAGE
     * permission.
     * 
-    * @param pathName
+    * @param data
     * @return point.x = width, point.y = height. On error return 0,0.
     */
    public static PointF getImageProportions(byte[] data) {
@@ -35,7 +35,7 @@ public class BitmapData {
    /**
     * Return an image proportions for image file.
     * 
-    * @param pathName
+    * @param fileName
     * @return point.x = width, point.y = height. On error return 0,0.
     */
    public static PointF getImageProportions(String fileName) {
